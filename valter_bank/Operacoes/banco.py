@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Módulo que define a classe principal do Banco, que gerencia clientes e contas
+
+# Importa a classe Cliente
+from Entidades.cliente import Cliente
+
+# Importa a classe conta e suas subclasses (Corrente e Poupança)
+from Entidades.conta import Conta, ContaCorrente, ContaPoupanca
+
+# Importa excessão personalizada para conta inexistente
+from Utilitarios.exceptions import ContaInexistenteError
+
+# Define a classe Banco
+class Banco:
+
+    """ Classe responsavel por gerenciar as operações do banco """
+
+    # Construtor da classe Banco
+    def __init__(self, nome: str):
+
+        # Nome do banco
+        self.nome = nome
+
+        # Dicionário de clientes (chave: CPF, valor: objeto Cliente)
+        self._clientes = {}
+
+        # Dicionário de contas (chave: número da conta, valor: objeto conta)
+        self._contas = {}
+
+        # Método para adicionar um novo cliente ao banco
+    def adicionar_cliente(self, nome: str, cpf: str) -> Cliente:
+
+        """ Cria e adiciona um novo cliente ao banco."""
+
+        # Verifica se já existe cliente com o mesmo CPF
+        if cpf in self._clientes:
+            print("Erro: Cliente com esse CPF já cadastrado.")
+            return self._clientes[cpf]
+
+        #Cria objeto Cliente e adiciona ao dicionário
+        novo_cliente = Cliente(nome, cpf)
+        self._clientes[cpf] = novo_cliente
+
+        print(f"Cliente {nome} adicionado com sucesso!")
+
+        return novo_cliente
+
+    # Método para criar uma conta para um cliente
+    def criar_conta(self, cliente: Cliente, tipo: str) -> Conta:
+
+        """ Cria uma nova conta para um cliente existente."""
+
+        # Número da nova conta será baseado no total de contas + 1
+        numero_conta = Conta.get_total_contas() + 1
+
+        # Cria conta corrente se o tipo informado for "Corrente"
+        if tipo.lower() == 'corrente':
+            nova_conta = ContaCorrente(numero_conta, cliente)
+
+        elif tipo.lower() == 'poupança':
+            nova_conta = ContaPoupanca(numero_conta, cliente)
+
+        else:
+            print("Tipo de conta inválido. Escolha 'corrente' ou 'poupanca'. ")
+            return None
+
+        # Adiciona a conta ao dicionário de contas
+        self._contas[numero_conta] = nova_conta
+
+        # Associa a conta ao cliente
+        cliente.adicionar_conta(nova_conta)
+        print(f"Conta {tipo} n° {numero_conta} criada para o cliente {cliente.nome}.")
+        return nova_conta
+
+    # Método para buscar uma conta
+    def buscar_conta(self, numero_conta : int) -> Conta:
+
+        # Tenta recuperar uma conta do dicionário
+        conta = self._contas.get(numero_conta)
+
+        # Se não encontrar, lança exceção personalizada
+        if not conta:
+            raise ContaInexistenteError(numero_conta)
+        return conta
+
+
